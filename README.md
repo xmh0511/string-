@@ -1,5 +1,5 @@
 # string plus plus
-# extend standard string and easy to use
+extend standard string and easy to use
 
 # Construct:
 String abc = "123"; //const char* construct;
