@@ -11,6 +11,8 @@
 #include <cctype>
 #include <fstream>
 #include <sstream>
+#include<locale>
+#include <codecvt>
 enum  class RegMode:std::size_t
 {
     SIGNLE,
@@ -52,22 +54,11 @@ public:
     }
     String operator +(const String& str) const
     {
-        std::size_t t_size = this->size();
-        std::size_t src_size = str.size();
-        std::size_t  n_size = t_size+src_size;
-        char *result = new char[n_size+1];
-        memcpy(result,this->data(),t_size);
-        memcpy(result+t_size,str.data(),src_size);
-        memcpy(result+n_size,"\0",1);
-        String temp{result};
-        delete []result;
-        return  temp;
+          String temp;
+          temp.append(*this).append(str);
+          return temp;
     }
-//    String& operator=(const String& str)
-//    {
-//        this->std::string::operator=(str.c_str());
-//        return *this;
-//    }
+
 public:
     std::string to_stdstring() const
     {
@@ -183,20 +174,8 @@ public:
     }
     String& sort()
     {
-        std::size_t char_size = this->size();
-        std::cout<<char_size<<std::endl;
-        for(int i=0;i<char_size-1;i++)
-        {
-            for(int k=0;k<char_size-1-i;k++)
-            {
-                if((*this)[k]>(*this)[k+1])
-                {
-                    char temp = (*this)[k];
-                    (*this)[k] = (*this)[k+1];
-                    (*this)[k+1] = temp;
-                }
-            }
-        }
+        auto char_size = this->size();
+        sort_by_ascii(&(*this)[0],0,char_size-1);
         return *this;
     }
 public:
@@ -216,6 +195,140 @@ public:
         *this = buff.str();
         return  *this;
     }
+
+protected:
+    template<class Facet>
+    struct deletable_facet : Facet
+    {
+        template<class ...Args>
+        deletable_facet(Args&& ...args)
+                : Facet(std::forward<Args>(args)...) {}
+        ~deletable_facet() {}
+    };
+public:
+      String url_encode() noexcept {
+        static auto hex_chars = "0123456789ABCDEF";
+        String result;
+        result.reserve(this->size()); // Minimum size of result
+
+        for (auto &chr : *this) {
+            if (!((chr >= '0' && chr <= '9') || (chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z') || chr == '-' || chr == '.' || chr == '_' || chr == '~'))
+                result += String("%") + hex_chars[static_cast<unsigned char>(chr) >> 4] + hex_chars[static_cast<unsigned char>(chr) & 15];
+            else
+                result += chr;
+        }
+        return result;
+    }
+
+     String url_decode() noexcept {
+        String result;
+        result.reserve(this->size() / 3 + (this->size() % 3)); // Minimum size of result
+
+        for (std::size_t i = 0; i < this->size(); ++i) {
+            auto &chr = this->operator[](i);
+            if (chr == '%' && i + 2 < this->size()) {
+                auto hex = this->substr(i + 1, 2);
+                auto decoded_chr = static_cast<char>(std::strtol(hex.c_str(), nullptr, 16));
+                result += decoded_chr;
+                i += 2;
+            }
+            else if (chr == '+')
+                result += ' ';
+            else
+                result += chr;
+        }
+        return result;
+    }
+
+    bool is_url_encode()
+    {
+        return this->find("%") != std::string::npos || this->find("+") != std::string::npos;
+    }
+
+    String utf8_to_gbk()
+    {
+        return utf16_to_gbk(utf8_to_utf16(*this));
+    }
+
+    String gbk_to_utf8()
+    {
+        return utf16_to_utf8(gbk_to_utf16(*this));
+    }
+
+private:
+
+    std::wstring gbk_to_utf16(const std::string &gbk)
+    {
+        typedef deletable_facet<std::codecvt_byname<wchar_t, char, std::mbstate_t>> gbfacet_t;
+        std::wstring_convert<gbfacet_t> conv(new gbfacet_t(GBK_LOCALE_NAME));
+        std::wstring utf16 = conv.from_bytes(gbk);
+        return utf16;
+    }
+
+    String utf16_to_gbk(const std::wstring &utf16)
+    {
+        typedef deletable_facet<std::codecvt_byname<wchar_t, char, std::mbstate_t>> gbfacet_t;
+        std::wstring_convert<gbfacet_t> conv(new gbfacet_t(GBK_LOCALE_NAME));
+
+        String gbk = conv.to_bytes(utf16);
+        return std::move(gbk);
+    }
+
+    std::wstring utf8_to_utf16(const std::string &utf8)
+    {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        std::wstring utf16 = conv.from_bytes(utf8);
+        return utf16;
+    }
+
+    String utf16_to_utf8(const std::wstring &utf16)
+    {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        String utf8 = conv.to_bytes(utf16);
+        return utf8;
+    }
+
+private:
+    void sort_by_ascii(char* ptr,long begin,long end)
+    {
+        if(begin<end)
+        {
+            long left_iter = begin;
+            long right_iter = end;
+            char compare = ptr[begin];
+            while(left_iter!=right_iter)
+            {
+                while(left_iter<right_iter)
+                {
+                    if(ptr[right_iter]<compare)
+                    {
+                        ptr[left_iter] = ptr[right_iter];
+                        break;
+                    }
+                    --right_iter;
+                }
+
+                while(left_iter<right_iter)
+                {
+                    if(ptr[left_iter]>compare)
+                    {
+                        ptr[right_iter] = ptr[left_iter];
+                        break;
+                    }
+                    ++left_iter;
+                }
+            }
+            ptr[left_iter] = compare;
+            sort_by_ascii(ptr,begin,left_iter-1);
+            sort_by_ascii(ptr,left_iter+1,end);
+        }
+    }
+private:
+#ifdef _MSC_VER
+    const char* GBK_LOCALE_NAME = ".936";
+#else
+    const char* GBK_LOCALE_NAME = "zh_CN.GBK";
+#endif
 };
 std::ostream& operator<<(std::ostream& out,const String& str)
 {
