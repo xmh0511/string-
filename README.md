@@ -1,40 +1,66 @@
 # string plus plus
 extend standard string and easy to use
 
-# Construct:
-String abc = "123"; //const char* construct;
-String abc = std::string("temp"); //std::string to construct;
-Output String to scree;
-std::cout<<String("screen")<<std::endl;
+   //create String from number;
+   xmh::String test1;
+   test1.format_number(1024);
+   std::cout<<test1<<std::endl;
 
-# Split by keyword;
-String sp = "abc;efg"; 
-auto vec = sp.split(";"); // easy to split by user declared keyword;
+   //String to number
+   xmh::String test2 = "10.555";
+   std::cout<<test2.to_double()+10<<std::endl;
 
-# concat by ketword;
-String jtest(vec,"&"); // easy to join with user declard keyword;
+   //split a string by spliter
 
-# Replace keywords:
-String("abc[]fg").replace("[]","&") // cout---> abc&fg;
-String("abc[][]fg").replace("[]","&",RegMode::GLOBAL) //cout----->abc&&fg;
+   xmh::String test3 = "a=b&c=d&e=f";
+   auto split_vec = test3.split("&");
+   for(auto& iter :split_vec)
+   {
+      std::cout<<iter<<std::endl;
+   }
 
-# format to number;
-String t1 = "10.002"; t1.to_int();
-String t2 = "123456"; t2.to_double();
+   //join a string_vec by str
+   auto test4 = xmh::String().join(split_vec,"*");
+   std::cout<<test4<<std::endl;
 
-# format from number to String:
-String(10).format_number(); //cout----->10:int;
+   //replace a  keywords
 
-# Format String by lower or upper;
-String("abc").to_upper().to_lower();  //  "ABC"--->"abc";
+   xmh::String test5 = "a*b*c*";
+   test5.replace("*","+",xmh::reg_mode::signle);
+   std::cout<<test5<<std::endl;
 
-# Sort:
-String("uafdag").sort(); //cout----->aadfgu;
+   //replace all  keywords
+   xmh::String test6 = "a*b*c*";
+   test6.replace("*","+",xmh::reg_mode::global);
+   std::cout<<test6<<std::endl;
 
-# write String to file:
-String("hello,world").write_file("/tmp/test.txt");
+   //format string lower
+   xmh::String test7 = "ABCDEFG";
+   std::cout<<test7.to_lower()<<std::endl;
 
-# read string from file:
-String().read_file("/tmp"/test.txt");
+   //format string upper
+   xmh::String test8 = "abcdefg";
+   std::cout<<test8.to_upper()<<std::endl;
+
+   //url_encode
+   xmh::String test9 = "中文";
+   std::cout<<test9.url_encode()<<std::endl;
+
+   //url_decode
+   std::cout<<test9.url_encode().url_decode()<<std::endl;
+
+   //read_from_file
+   xmh::String file_text;
+   file_text.read_from_file("./CMakeCache.txt");
+   std::cout<<file_text<<std::endl;
+
+
+   //write_to_file
+   xmh::String file_text2 = "just a plain text";
+   file_text2.write_to_file("./file.log");
+
+   //Append to file
+   file_text2 = "\r\nand this is append string";
+   file_text2.write_to_file("./file.log",xmh::write_file_mode::add);
 
 
