@@ -1,6 +1,6 @@
 # string plus plus
 extend standard string and easy to use
-
+```
    //create String from number;
    xmh::String test1;
    test1.format_number(1024);
@@ -63,4 +63,4 @@ extend standard string and easy to use
    file_text2 = "\r\nand this is append string";
    file_text2.write_to_file("./file.log",xmh::write_file_mode::add);
 
-
+```
