@@ -17,7 +17,7 @@ namespace xmh
 {
     enum  class reg_mode:std::size_t
     {
-        signle,
+        single,
         global
     };
     enum class write_file_mode:std::size_t
