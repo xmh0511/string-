@@ -30,7 +30,7 @@ int main()
    //replace a  keywords
 
    xmh::String test5 = "a*b*c*";
-   test5.replace("*","+",xmh::reg_mode::signle);
+   test5.replace("*","+",xmh::reg_mode::single);
    std::cout<<test5<<std::endl;
 
    //replace all  keywords
